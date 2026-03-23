@@ -34,7 +34,7 @@ def init_model(model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE):
     llm = GigaChat(
         credentials=api_key,
         base_url=url,
-        # model=model,
+        model=model,
         scope="GIGACHAT_API_PERS",
         temperature=temperature,
         verify_ssl_certs=False,
@@ -45,19 +45,19 @@ def init_model(model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE):
 
 async def main():
     models = [
-        "Gigachat-2-Lite",
+        "Gigachat-2",
         "Gigachat-2-Pro",
         "Gigachat-2-Max",
     ]
 
     input_prices = {
-        "Gigachat-2-Lite": 1_300 / 20_000_000,
+        "Gigachat-2": 1_300 / 20_000_000,
         "Gigachat-2-Pro": 1_500 / 3_000_000,
         "Gigachat-2-Max": 1_950 / 3_000_000,
     }
 
     output_prices = {
-        "Gigachat-2-Lite": 1_300 / 20_000_000,
+        "Gigachat-2": 1_300 / 20_000_000,
         "Gigachat-2-Pro": 1_500 / 3_000_000,
         "Gigachat-2-Max": 1_950 / 3_000_000,
     }
