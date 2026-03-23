@@ -5,6 +5,6 @@ description = "Client for AI advent challenge"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "langchain-openai>=1.1.11",
+    "langchain-gigachat>=0.3.12",
     "python-dotenv>=1.2.2",
 ]
