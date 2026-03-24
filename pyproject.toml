@@ -1,0 +1,20 @@
+[project]
+name = "ai-advent-challenge"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "backend",
+    "client",
+]
+
+[tool.uv.workspace]
+members = [
+    "client",
+    "backend",
+]
+
+[tool.uv.sources]
+client = { workspace = true }
+backend = { workspace = true }
