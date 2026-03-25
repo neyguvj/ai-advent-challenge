@@ -1,60 +1,96 @@
-# AI Advent Challenge Backend
+# AI Assistant Backend
 
-Flask web server providing LLM completion services.
+This is the backend service for an AI assistant that handles user sessions and message history.
 
-## Endpoints
+## API Endpoints
 
-### GET /list_models
-List all available models.
+### Message History Endpoints
 
-**Response:**
-```json
-{
-  "models": [
-    "Gigachat-2",
-    "Gigachat-2-Pro", 
-    "Gigachat-2-Max"
-  ]
-}
+#### Append a new message to a session
 ```
-
-### POST /completion
-Send request to LLM and return response.
+POST /api/sessions/{session_id}/messages
+```
 
 **Request Body:**
 ```json
 {
-  "model": "GigaChat-2",
-  "prompt": "You are a helpful assistant...",
-  "request": "What is the capital of France?",
-  "temperature": 0.1,
-  "max_tokens": 2048
+  "role": "system|assistent|user",
+  "content": "Message content"
 }
 ```
 
 **Response:**
 ```json
 {
-  "model": "GigaChat-2",
-  "prompt": "You are a helpful assistant...",
-  "request": "What is the capital of France?",
-  "response": "The capital of France is Paris."
+  "id": "uuid",
+  "session_id": "uuid",
+  "timestamp": "datetime",
+  "role": "system|assistent|user",
+  "content": "Message content"
 }
 ```
 
-## Environment Variables
-
-- `API_KEY` - API key for GigaChat
-
-## Running the Server
-
-```bash
-# Go to Docker directory
-```bash
-cd ../docker
+#### Get all messages for a session
+```
+GET /api/sessions/{session_id}/messages
 ```
 
-# Run the server
-```bash
-docker-compose up --build
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "session_id": "uuid",
+    "timestamp": "datetime",
+    "role": "system|assistent|user",
+    "content": "Message content"
+  },
+]
+```
+
+#### Delete all messages for a session
+```
+DELETE /api/sessions/{session_id}/messages
+```
+
+**Response:**
+```json
+{
+  "message": "Successfully deleted X messages",
+  "count": "X"
+}
+```
+
+#### Append multiple messages to a session (batch)
+```
+POST /api/sessions/{session_id}/messages/batch
+```
+
+**Request Body:**
+```json
+{
+  "messages": [
+    {
+      "role": "system|assistent|user",
+      "content": "Message content 1"
+    },
+    {
+      "role": "system|assistent|user",
+      "content": "Message content 2"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "session_id": "uuid",
+    "timestamp": "datetime",
+    "role": "system|assistent|user",
+    "content": "Message content 1"
+  },
+]
 ```

@@ -1,13 +1,6 @@
-# AI Advent Challenge Client
+# AI Advent Challenge CLI
 
 CLI client for interacting with the backend server.
-
-## Installation
-
-```bash
-# Install dependencies
-pip install -e .
-```
 
 ## Usage
 
@@ -28,10 +21,21 @@ uv run cli_client.py request \
     --request "What is the capital of France?"
 ```
 
+### Create User
+
+```bash
+uv run cli_client.py user create \
+    --base-url http://localhost:8080 \
+    --email test@example.com \
+    --password secret123
+```
+
 ## Parameters
 
-- `--base-url`: Base URL of the backend server (required for both commands)
+- `--base-url`: Base URL of the backend server (required for all commands)
 - `--model`: Model ID to use (required for request command)
-- `--temperature`: Model temperature (default: 0.1) 
+- `--temperature`: Model temperature (default: 0.1)
 - `--prompt`: System prompt (default: empty)
 - `--request`: User request (required for request command)
+- `--email`: Email of the new user (required for user create command)
+- `--password`: Password of the new user (required for user create command)

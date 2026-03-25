@@ -5,8 +5,14 @@ description = "Backend server for AI advent challenge"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.18.4",
     "flask>=2.3.3",
     "gunicorn>=25.1.0",
     "langchain-gigachat>=0.3.12",
-    "python-dotenv>=1.2.2",
+    "psycopg2-binary>=2.9.11",
+    "python-dotenv>=1.2.2", 
+    "sqlalchemy>=2.0.48",
 ]
+
+[tool.setuptools]
+py-modules = []
