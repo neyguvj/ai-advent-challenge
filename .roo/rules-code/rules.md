@@ -1,6 +1,6 @@
 ## Description
-We are writting AI assistent.
-Assistent consists of backend which runs LLM requests and stores dialog history and CLI client for it.
+We are writting AI assistant.
+Assistant consists of backend which runs LLM requests and stores dialog history and CLI client for it.
 
 ## Libraries and frameworks
 We use `python 3` programming language.

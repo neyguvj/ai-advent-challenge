@@ -47,6 +47,7 @@ def run_request(base_url, model, temperature, prompt, user_request, max_tokens, 
 
         session_id = get_session_id(base_url, user_id)
         if session_id is not None:
+            payload["session_id"] = session_id
             messages = load_messages(base_url, session_id)
             print_messages(messages)
 
@@ -55,7 +56,23 @@ def run_request(base_url, model, temperature, prompt, user_request, max_tokens, 
 
         if response.status_code == 200:
             result = response.json()
-            print(f"assistent: {result.get('response')}")
+            print(f"assistant: {result.get('response')}")
+
+            # Print token usage statistics if available
+            stats = result.get("statistics", {})
+            if stats:
+                print(f"Total Input tokens: {stats.get('total_input_tokens', 0)}")
+                print(f"Total Output tokens: {stats.get('total_output_tokens', 0)}")
+                print(f"Last input tokens: {stats.get('last_input_tokens', 0)}")
+                print(f"Last output tokens: {stats.get('last_output_tokens', 0)}")
+
+            # Print price information if available
+            price = result.get("price", {})
+            if price:
+                print(f"Last request price: {price.get('last_request_price', 0):.6f}р")
+                print(f"Total input price: {price.get('total_input_price', 0):.6f}р")
+                print(f"Total output price: {price.get('total_output_price', 0):.6f}р")
+                print(f"All requests price: {price.get('all_requests_price', 0):.6f}р")
         else:
             print(
                 f"Error: Failed to get completion (status code: {response.status_code})"
@@ -147,8 +164,6 @@ def print_messages(messages):
         print(f"{msg.get("timestamp")}:, {msg.get("role")}")
         print(msg.get("content"))
         print("\n")
-    print("*" * 80)
-    print("new request here")
 
 
 def main():

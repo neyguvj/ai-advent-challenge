@@ -47,7 +47,7 @@ def upgrade() -> None:
         sa.Column("session_id", sa.UUID(), nullable=False),
         sa.Column("timestamp", sa.Time(), nullable=True),
         sa.Column(
-            "role", sa.Enum("system", "assistent", "human", name="role"), nullable=True
+            "role", sa.Enum("system", "assistant", "human", name="role"), nullable=True
         ),
         sa.Column("content", sa.Text(), nullable=False),
         sa.ForeignKeyConstraint(

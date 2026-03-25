@@ -5,7 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.routes.utils import run_request
 from app.db.sessions import create_session, get_session_by_id
 from app.db.messages import create_message, get_messages_by_session_id
-from app.db.models import Role
+from app.db.models import Role, Statistics
+from app.db.statistics import update_statistics
 
 # Available models (this could be dynamic in a real implementation)
 AVAILABLE_MODELS = [
@@ -13,6 +14,19 @@ AVAILABLE_MODELS = [
     "Gigachat-2-Pro",
     "Gigachat-2-Max",
 ]
+
+# https://developers.sber.ru/docs/ru/gigachat/tariffs/individual-tariffs
+INPUT_PRICES = {
+    "Gigachat-2": 1_300 / 20_000_000,
+    "Gigachat-2-Pro": 1_500 / 3_000_000,
+    "Gigachat-2-Max": 1_950 / 3_000_000,
+}
+
+OUTPUT_PRICES = {
+    "Gigachat-2": 1_300 / 20_000_000,
+    "Gigachat-2-Pro": 1_500 / 3_000_000,
+    "Gigachat-2-Max": 1_950 / 3_000_000,
+}
 
 DEFAULT_MODEL = AVAILABLE_MODELS[0]
 DEFAULT_TEMPERATURE = 0.1
@@ -113,16 +127,47 @@ def completion():
     response = run_completion(llm, conversation_history, user_request)
 
     create_message(session_id, Role.human, user_request)
-    create_message(session_id, Role.assistent, response.content)
+    create_message(session_id, Role.assistant, response.content)
 
-    return jsonify(
-        {
-            "model": model_id,
-            "prompt": prompt,
-            "response": response.content,
-            "session_id": session.id,
-        }
-    )
+    usage = response.usage_metadata
+    input_tokens = usage.get("input_tokens", 0)
+    output_tokens = usage.get("output_tokens", 0)
+
+    stats = update_statistics(session_id, input_tokens, output_tokens)
+    response_data = {
+        "model": model_id,
+        "prompt": prompt,
+        "response": response.content,
+        "session_id": session.id,
+        "statistics": {
+            "total_input_tokens": stats.total_input_tokens,
+            "total_output_tokens": stats.total_output_tokens,
+            "last_input_tokens": stats.last_input_tokens,
+            "last_output_tokens": stats.last_output_tokens,
+        },
+        "price": count_price(model_id, stats),
+    }
+
+    return jsonify(response_data)
+
+
+def count_price(model_id, stats: Statistics):
+    last_input_price = INPUT_PRICES[model_id] * stats.last_input_tokens
+    last_output_price = OUTPUT_PRICES[model_id] * stats.last_output_tokens
+    last_request_price = last_input_price + last_output_price
+
+    total_input_price = INPUT_PRICES[model_id] * stats.total_input_tokens
+    total_output_price = OUTPUT_PRICES[model_id] * stats.total_output_tokens
+    all_requests_price = total_input_price + total_output_price
+
+    return {
+        "last_input_price": last_input_price,
+        "last_output_price": last_output_price,
+        "last_request_price": last_request_price,
+        "total_input_price": total_input_price,
+        "total_output_price": total_output_price,
+        "all_requests_price": all_requests_price,
+    }
 
 
 def convert_role(role):

@@ -5,6 +5,7 @@ from sqlalchemy import (
     create_engine,
     Column,
     Enum,
+    Integer,
     Text,
     ForeignKey,
     UUID,
@@ -51,7 +52,7 @@ class Session(DictSerialisable, Base):
 
 class Role(enum.Enum):
     system = 0
-    assistent = 1
+    assistant = 1
     human = 2
 
 
@@ -64,3 +65,17 @@ class Message(DictSerialisable, Base):
     timestamp = Column(Time)
     role = Column(Enum(Role))
     content = Column(Text, nullable=False)
+
+
+class Statistics(DictSerialisable, Base):
+    __tablename__ = "statistics"
+    session_id = Column(
+        UUID,
+        ForeignKey("sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    )
+    total_input_tokens = Column(Integer, default=0)
+    total_output_tokens = Column(Integer, default=0)
+    last_input_tokens = Column(Integer, default=0)
+    last_output_tokens = Column(Integer, default=0)

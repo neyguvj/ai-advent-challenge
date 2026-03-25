@@ -14,7 +14,7 @@ POST /api/sessions/{session_id}/messages
 **Request Body:**
 ```json
 {
-  "role": "system|assistent|user",
+  "role": "system|assistant|user",
   "content": "Message content"
 }
 ```
@@ -25,7 +25,7 @@ POST /api/sessions/{session_id}/messages
   "id": "uuid",
   "session_id": "uuid",
   "timestamp": "datetime",
-  "role": "system|assistent|user",
+  "role": "system|assistant|user",
   "content": "Message content"
 }
 ```
@@ -42,7 +42,7 @@ GET /api/sessions/{session_id}/messages
     "id": "uuid",
     "session_id": "uuid",
     "timestamp": "datetime",
-    "role": "system|assistent|user",
+    "role": "system|assistant|user",
     "content": "Message content"
   },
 ]
@@ -71,11 +71,11 @@ POST /api/sessions/{session_id}/messages/batch
 {
   "messages": [
     {
-      "role": "system|assistent|user",
+      "role": "system|assistant|user",
       "content": "Message content 1"
     },
     {
-      "role": "system|assistent|user",
+      "role": "system|assistant|user",
       "content": "Message content 2"
     }
   ]
@@ -89,7 +89,7 @@ POST /api/sessions/{session_id}/messages/batch
     "id": "uuid",
     "session_id": "uuid",
     "timestamp": "datetime",
-    "role": "system|assistent|user",
+    "role": "system|assistant|user",
     "content": "Message content 1"
   },
 ]
