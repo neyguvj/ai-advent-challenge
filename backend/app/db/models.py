@@ -50,23 +50,6 @@ class Session(DictSerialisable, Base):
     name = Column(Text, nullable=False)
 
 
-class Role(enum.Enum):
-    system = 0
-    assistant = 1
-    human = 2
-
-
-class Message(DictSerialisable, Base):
-    __tablename__ = "messages"
-    id = Column(UUID, primary_key=True)
-    session_id = Column(
-        UUID, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False
-    )
-    timestamp = Column(Time)
-    role = Column(Enum(Role))
-    content = Column(Text, nullable=False)
-
-
 class Statistics(DictSerialisable, Base):
     __tablename__ = "statistics"
     session_id = Column(

@@ -8,7 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.db.models import Base
-from app.db import get_url
+from app.db import get_psycopg_url
 
 load_dotenv()
 
@@ -71,7 +71,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    db_url = get_url()
+    db_url = get_psycopg_url()
     if not db_url:
         raise ValueError("DATABASE_URL environment variable not set")
 

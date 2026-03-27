@@ -31,9 +31,9 @@ uv run --directory ../ cli/cli_client.py user create \
     --email="$USER" \
     --password="$PASSWORD"
 
-echo "list available models..."
-uv run --directory ../ cli/cli_client.py list \
-    --base-url="$BASE_URL"
+# echo "list available models..."
+# uv run --directory ../ cli/cli_client.py list \
+#     --base-url="$BASE_URL"
 
 function run_llm() {
   echo "Running request..."

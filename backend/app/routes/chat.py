@@ -1,12 +1,25 @@
+import sys
+
 from flask import Blueprint, request, jsonify
 import os
+
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
+
 from langchain_gigachat.chat_models import GigaChat
 from langchain_core.prompts import ChatPromptTemplate
+
+
 from app.routes.utils import run_request
+from app.db import get_connection
+from app.db.models import Statistics
 from app.db.sessions import create_session, get_session_by_id
-from app.db.messages import create_message, get_messages_by_session_id
-from app.db.models import Role, Statistics
 from app.db.statistics import update_statistics
+from app.db.checkpointer import get_checkpointer
+from app.db.messages import get_history_by_session_id
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
 
 # Available models (this could be dynamic in a real implementation)
 AVAILABLE_MODELS = [
@@ -48,17 +61,47 @@ def init_model(
         max_tokens=max_tokens,
     )
 
-    return llm
+    checkpointer = get_checkpointer(get_connection())
+
+    agent = create_agent(
+        llm,
+        middleware=[
+            SummarizationMiddleware(
+                model=llm,
+                trigger=("tokens", 200),
+                keep=("messages", 2),
+            ),
+        ],
+        checkpointer=checkpointer,
+    )
+
+    return agent
 
 
-def run_completion(llm, messages, request):
+def run_completion(llm, prompt, request, session_id):
     """Run the LLM completion with given parameters"""
-    prompt_template = ChatPromptTemplate.from_messages(messages)
 
-    chain = prompt_template | llm
-    response = chain.invoke({"user_input": request})
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", prompt),
+            MessagesPlaceholder(variable_name="history"),
+            ("human", "{user_input}"),
+        ]
+    )
 
-    return response
+    chain = prompt | llm
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        get_history_by_session_id,
+        input_messages_key="user_input",
+        history_messages_key="history",
+    )
+    response = chain_with_history.invoke(
+        {"user_input": request},
+        config={"configurable": {"session_id": session_id, "thread_id": session_id}},
+    )
+
+    return response["messages"][-1]
 
 
 # Create a Flask Blueprint for chat routes
@@ -92,42 +135,9 @@ def completion():
     if not user_request:
         return jsonify({"error": "User request is required"}), 400
 
-    # Handle session logic
-    if session_id is None:
-        # Create a new session since no session ID was provided
-        if not user_id:
-            return (
-                jsonify({"error": "User ID is required to create a new session"}),
-                400,
-            )
-        session = create_session(user_id, "New Session")
-        session_id = session.id
-        create_message(session_id, Role.system, prompt)
-    else:
-        session = get_session_by_id(session_id)
-        if not session:
-            # Session doesn't exist, but we can create it with a default name
-            if not user_id:
-                return (
-                    jsonify({"error": "User ID is required to create a new session"}),
-                    400,
-                )
-
-            session = create_session(user_id, "New Session")
-            session_id = session.id
-
-    messages = get_messages_by_session_id(session_id)
-
-    conversation_history = []
-    for msg in messages:
-        conversation_history.append((msg.role.name, msg.content))
-
-    conversation_history.append((Role.human.name, "{user_input}"))
     llm = init_model(model=model_id, temperature=temperature, max_tokens=max_tokens)
-    response = run_completion(llm, conversation_history, user_request)
-
-    create_message(session_id, Role.human, user_request)
-    create_message(session_id, Role.assistant, response.content)
+    session_id = get_session(user_id, session_id, user_request)
+    response = run_completion(llm, prompt, user_request, session_id)
 
     usage = response.usage_metadata
     input_tokens = usage.get("input_tokens", 0)
@@ -138,7 +148,7 @@ def completion():
         "model": model_id,
         "prompt": prompt,
         "response": response.content,
-        "session_id": session.id,
+        "session_id": session_id,
         "statistics": {
             "total_input_tokens": stats.total_input_tokens,
             "total_output_tokens": stats.total_output_tokens,
@@ -170,10 +180,18 @@ def count_price(model_id, stats: Statistics):
     }
 
 
-def convert_role(role):
-    role_name = (
-        "human"
-        if role == Role.human
-        else ("assistant" if role == Role.assistent else "system")
-    )
-    return role_name
+def get_session(user_id, session_id, user_request) -> str:
+    if session_id is None:
+        # Create a new session since no session ID was provided
+        if not user_id:
+            raise ValueError("User ID is required to create a new session")
+        session = create_session(user_id, user_request)
+        return str(session.id)
+    else:
+        session = get_session_by_id(session_id)
+        if not session:
+            if not user_id:
+                raise ValueError("User ID is required to create a new session")
+            session = create_session(user_id, user_request)
+            return str(session.id)
+    return session_id

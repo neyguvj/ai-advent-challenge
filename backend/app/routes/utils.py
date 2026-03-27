@@ -20,6 +20,7 @@ def run_request(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        result = None
         try:
             result = func(*args, **kwargs)
             # If the function returns a JSON-serializable object, return it directly
@@ -28,7 +29,7 @@ def run_request(func):
             # If the function returns a Flask response object, return it as-is
             return result
         except Exception as e:
-            logger.error(f"Error in {func.__name__}: {str(e)}")
-            return jsonify({"error": str(e)}), 500
+            logger.error(f"Error in {func.__name__}: {str(e)} {str(result)}")
+            return jsonify({"error": str(e), "result": str(result)}), 500
 
     return wrapper

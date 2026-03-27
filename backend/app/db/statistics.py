@@ -1,11 +1,11 @@
 from sqlalchemy.orm import sessionmaker
 from app.db.models import Statistics, User
-from app.db import get_url
+from app.db import get_psycopg_url
 from sqlalchemy import create_engine
 
 
 # Create engine and session factory once when the module is loaded
-engine = create_engine(get_url())
+engine = create_engine(get_psycopg_url())
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
